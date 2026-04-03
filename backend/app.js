@@ -18,7 +18,7 @@ const app = express();
 // ✅ CORS for dev + deployed frontend
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://your-frontend.onrender.com" // replace with live frontend URL
+  "https://jsmv-crm.vercel.app/login" // replace with live frontend URL
 ];
 app.use(cors({
   origin: (origin, callback) => {
