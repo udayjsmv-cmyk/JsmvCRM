@@ -16,16 +16,21 @@ const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const app = express();
 
 // ✅ CORS for dev + deployed frontend
+const cors = require('cors');
+
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://jsmv-crm.vercel.app/login" // replace with live frontend URL
+  "https://jsmv-crm.vercel.app" // your Vercel frontend
 ];
+
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) callback(null, true);
-    else callback(new Error("Not allowed by CORS"));
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
   },
-  credentials: true
+  credentials: true, // if using cookies/auth
 }));
 
 // ✅ Logger and body parser
