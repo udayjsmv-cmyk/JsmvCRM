@@ -1,0 +1,172 @@
+/* ==========================
+   Global / Fullscreen Layout
+=========================== */
+.input {
+  @apply border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-500 w-full;
+};
+
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #F1FAFA; /* Mist White */
+  color: #002B3D; /* Navy Ink */
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark Mode (Optional) */
+body.dark {
+  background-color: #002B3D; /* Navy Ink background */
+  color: #F1FAFA; /* Mist White text */
+}
+
+/* ==========================
+   Logo Animation
+=========================== */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #00B4D8);
+}
+
+/* Logo Spin Animation */
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+/* ==========================
+   Cards, Profile, Settings
+=========================== */
+.card, .settings-card, .profile-container, .client-card {
+  transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+  background-color: #F1FAFA; /* Mist White */
+  border-radius: 1rem;
+}
+.card:hover, .settings-card:hover, .profile-container:hover, .client-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 105, 137, 0.2); /* Deep Teal shadow */
+}
+
+/* Profile Image Hover */
+.profile-container img {
+  transition: transform 0.3s;
+}
+.profile-container img:hover {
+  transform: scale(1.05);
+}
+
+/* ==========================
+   Tables / ClientDataViewer
+=========================== */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+th, td {
+  border: 1px solid #CCE5E5; /* Light teal border */
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+th {
+  background-color: #006989; /* Primary Deep Teal */
+  color: #F1FAFA; /* Mist White */
+  font-weight: 600;
+}
+tbody tr {
+  background-color: #F1FAFA; /* Mist White */
+  transition: background-color 0.2s;
+}
+tbody tr:hover {
+  background-color: #E0F7FA; /* Sky Aqua highlight */
+}
+
+/* ==========================
+   Buttons / Inputs / Forms
+=========================== */
+button, .btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+button.primary, .btn-primary {
+  background-color: #006989; /* Primary Deep Teal */
+  color: #F1FAFA;
+}
+button.primary:hover, .btn-primary:hover {
+  background-color: #00B4D8; /* Sky Aqua hover */
+}
+
+button.accent, .btn-accent {
+  background-color: #00B4D8;
+  color: #002B3D;
+}
+button.accent:hover, .btn-accent:hover {
+  background-color: #006989;
+  color: #F1FAFA;
+}
+
+input, select, textarea {
+  border: 1px solid #CCE5E5;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #00B4D8;
+  box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.3);
+}
+
+/* Disabled Fields */
+input:disabled, select:disabled, textarea:disabled {
+  background-color: #E5F7F8;
+}
+
+/* ==========================
+   Sidebar
+=========================== */
+.sidebar {
+  background-color: #006989; /* Deep Teal */
+  color: #F1FAFA;
+}
+.sidebar a {
+  color: #F1FAFA;
+  transition: background-color 0.2s, color 0.2s;
+}
+.sidebar a:hover {
+  background-color: #00B4D8; /* Sky Aqua */
+  color: #002B3D; /* Navy Ink */
+}
+
+/* ==========================
+   Responsive
+=========================== */
+@media (max-width: 768px) {
+  .flex-col-md {
+    flex-direction: column !important;
+  }
+  .md\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Misc */
+.read-the-docs {
+  color: #002B3D;
+}
