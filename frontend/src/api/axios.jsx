@@ -1,9 +1,11 @@
 import axios from "axios";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://jsmvcrm.onrender.com/api";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // backend URL
+  baseURL: API_BASE,
   timeout: 20000,
-  withCredentials: true, // only if backend uses cookies
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
