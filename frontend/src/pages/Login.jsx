@@ -13,12 +13,11 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault(); // ✅ prevent page reload
 
-    console.log("Submitting login..."); // 🔍 debug
-
     setError("");
     setLoading(true);
 
     try {
+      // ✅ ONLY endpoint (NO env here)
       const res = await api.post("/auth/login", {
         email: email.trim().toLowerCase(),
         password,
@@ -26,11 +25,11 @@ const Login = () => {
 
       const { token, user } = res.data;
 
-      // ✅ Save auth data
+      // ✅ store auth data
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // ✅ Redirect based on role
+      // ✅ redirect by role
       switch (user.role) {
         case "admin":
           navigate("/admin");
@@ -48,13 +47,10 @@ const Login = () => {
           navigate("/");
       }
     } catch (err) {
-      console.error("Login error:", err);
-
       const msg =
         err.response?.data?.message ||
         err.message ||
         "Login failed";
-
       setError(msg);
     } finally {
       setLoading(false);
@@ -72,7 +68,7 @@ const Login = () => {
           <p className="text-red-500 text-center mb-3">{error}</p>
         )}
 
-        {/* ✅ IMPORTANT: onSubmit */}
+        {/* ✅ IMPORTANT */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="email"
@@ -92,7 +88,7 @@ const Login = () => {
             className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
 
-          {/* ✅ IMPORTANT: type="submit" */}
+          {/* ✅ MUST be submit */}
           <button
             type="submit"
             disabled={loading}
