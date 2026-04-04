@@ -25,6 +25,7 @@ const Calling = () => {
     "Business",
   ];
 
+  // ✅ UPLOAD FUNCTION (Manager only)
   const handleUpload = async (e) => {
     e.preventDefault();
 
@@ -63,7 +64,7 @@ const Calling = () => {
       toast.success(`Inserted: ${data.inserted}, Failed: ${data.failed}`);
 
       setFile(null);
-      setFetchLeads(prev => !prev);
+      setFetchLeads((prev) => !prev);
     } catch (err) {
       console.error(err);
       toast.error(err.message);
@@ -72,7 +73,7 @@ const Calling = () => {
     }
   };
 
-  // ✅ NEW DELETE FUNCTION
+  // ✅ DELETE FUNCTION (Admin only)
   const handleDeleteAll = async () => {
     if (!selectedCategory) {
       return toast.error("Select category first");
@@ -105,7 +106,7 @@ const Calling = () => {
 
       toast.success("All data deleted successfully");
 
-      setFetchLeads(prev => !prev);
+      setFetchLeads((prev) => !prev);
     } catch (err) {
       console.error(err);
       toast.error(err.message);
@@ -118,46 +119,49 @@ const Calling = () => {
     <div className="p-6">
       <h2 className="text-xl font-semibold mb-4">Calling Department</h2>
 
+      {/* CATEGORY SELECT */}
       <select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
         className="border p-2 mb-4"
       >
         <option value="">Select Category</option>
-        {categories.map(cat => (
+        {categories.map((cat) => (
           <option key={cat}>{cat}</option>
         ))}
       </select>
 
-      {role === "manager" && (
-        <>
-          <form onSubmit={handleUpload} className="mb-4">
-            <input
-              type="file"
-              accept=".csv,.xlsx,.xls"
-              onChange={(e) => setFile(e.target.files[0])}
-            />
+      {/* ✅ UPLOAD - MANAGER ONLY */}
+      {role?.toLowerCase() === "manager" && (
+        <form onSubmit={handleUpload} className="mb-4">
+          <input
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            onChange={(e) => setFile(e.target.files[0])}
+          />
 
-            <button
-              type="submit"
-              disabled={uploading}
-              className="ml-2 px-4 py-2 bg-blue-600 text-white rounded"
-            >
-              {uploading ? "Uploading..." : "Upload"}
-            </button>
-          </form>
-
-          {/* ✅ DELETE BUTTON */}
           <button
-            onClick={handleDeleteAll}
-            disabled={deleting}
-            className="px-4 py-2 bg-red-600 text-white rounded"
+            type="submit"
+            disabled={uploading}
+            className="ml-2 px-4 py-2 bg-blue-600 text-white rounded"
           >
-            {deleting ? "Deleting..." : "Delete All Data"}
+            {uploading ? "Uploading..." : "Upload"}
           </button>
-        </>
+        </form>
       )}
 
+      {/* ✅ DELETE - ADMIN ONLY */}
+      {role?.toLowerCase() === "admin" && (
+        <button
+          onClick={handleDeleteAll}
+          disabled={deleting}
+          className="px-4 py-2 bg-red-600 text-white rounded mb-4"
+        >
+          {deleting ? "Deleting..." : "Delete All Data"}
+        </button>
+      )}
+
+      {/* DATA VIEWER */}
       <ClientDataViewer
         role={role}
         currentUser={currentUser}
