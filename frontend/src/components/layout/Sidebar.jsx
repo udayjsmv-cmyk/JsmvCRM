@@ -45,17 +45,18 @@ const Sidebar = () => {
   const permissions = roleConfig[role] || {};
 
   useEffect(() => {
-    if (location.pathname.startsWith("/departments")) setDeptOpen(true);
+    if (location.pathname.startsWith("/departments")) {
+      setDeptOpen(true);
+    }
   }, [location.pathname]);
 
   // ✅ Active link styling
   const linkClasses = (path) =>
-    `flex items-center px-4 py-2 rounded-md transition-all duration-200 
-     ${
-       location.pathname.startsWith(path)
-         ? "bg-[#00B4D8] text-[#002B3D] font-semibold"
-         : "text-[#F1FAFA] hover:bg-[#00B4D8] hover:text-[#002B3D]"
-     }`;
+    `flex items-center px-4 py-2 rounded-md transition-all duration-200 ${
+      location.pathname.startsWith(path)
+        ? "bg-[#00B4D8] text-[#002B3D] font-semibold"
+        : "text-[#F1FAFA] hover:bg-[#00B4D8] hover:text-[#002B3D]"
+    }`;
 
   const isDepartmentActive = location.pathname.startsWith("/departments");
 
@@ -79,7 +80,6 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex flex-col mt-4 space-y-2 flex-1 overflow-auto">
-
         {/* Dashboard */}
         {permissions.dashboard && (
           <Link to="/dashboard" className={linkClasses("/dashboard")}>
@@ -88,7 +88,7 @@ const Sidebar = () => {
           </Link>
         )}
 
-        {/* Profile (All roles) */}
+        {/* Profile */}
         <Link to="/profile" className={linkClasses("/profile")}>
           <i className="fa-solid fa-user mr-3 w-5"></i>
           {isOpen && "Profile"}
@@ -112,17 +112,19 @@ const Sidebar = () => {
 
         {/* Departments */}
         {permissions.departments?.length === 1 ? (
-          // ✅ Single department (Employee / Preparer / Reviewer)
+          // ✅ Single department
           <Link
             to={`/departments/${permissions.departments[0]}`}
-            className={`linkClasses(/departments/${permissions.departments[0]})`}
+            className={linkClasses(
+              `/departments/${permissions.departments[0]}`
+            )}
           >
             <i className="fa-solid fa-building mr-3 w-5"></i>
             {isOpen && formatLabel(permissions.departments[0])}
           </Link>
         ) : permissions.departments?.length > 1 ? (
-          // ✅ Multiple departments (Admin / Manager)
           <>
+            {/* Dropdown Button */}
             <button
               onClick={() => setDeptOpen(!deptOpen)}
               className={`flex items-center justify-between px-4 py-2 rounded-md w-full focus:outline-none transition-all duration-200 ${
@@ -135,6 +137,7 @@ const Sidebar = () => {
                 <i className="fa-solid fa-building mr-3 w-5"></i>
                 {isOpen && "Departments"}
               </div>
+
               {isOpen && (
                 <i
                   className={`fa-solid transition-transform duration-200 ${
@@ -144,13 +147,14 @@ const Sidebar = () => {
               )}
             </button>
 
+            {/* Dropdown Items */}
             {deptOpen && isOpen && (
               <div className="flex flex-col ml-8 space-y-1">
                 {permissions.departments.map((dept) => (
                   <Link
                     key={dept}
-                    to={/departments/${dept}}
-                    className={linkClasses(/departments/${dept})}
+                    to={`/departments/${dept}`}
+                    className={linkClasses(`/departments/${dept}`)}
                   >
                     {formatLabel(dept)}
                   </Link>
