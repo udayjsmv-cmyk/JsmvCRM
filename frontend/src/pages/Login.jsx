@@ -1,7 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
-import { AiOutlineEye } from "react-icons/ai";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -9,36 +9,16 @@ const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [status, setStatus] = useState({ loading: false, error: "" });
 
-  const [displayPassword, setDisplayPassword] = useState("");
-  const [showEye, setShowEye] = useState(false);
-  const maskTimeoutRef = useRef(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [eyeVisible, setEyeVisible] = useState(false); // will appear after first letter
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "password") {
-      // Clear any previous timeout
-      if (maskTimeoutRef.current) clearTimeout(maskTimeoutRef.current);
+    setForm((prev) => ({ ...prev, [name]: value }));
 
-      setForm((prev) => ({ ...prev, password: value }));
-
-      if (value.length > 0) {
-        // Show the last typed letter
-        const masked = "*".repeat(value.length - 1) + value.slice(-1);
-        setDisplayPassword(masked);
-        setShowEye(true);
-
-        // Mask last letter after 500ms and hide the eye
-        maskTimeoutRef.current = setTimeout(() => {
-          setDisplayPassword("*".repeat(value.length));
-          setShowEye(false);
-        }, 500);
-      } else {
-        setDisplayPassword("");
-        setShowEye(false);
-      }
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
+    if (name === "password" && value.length > 0) {
+      setEyeVisible(true); // show eye permanently after first letter
     }
   };
 
@@ -101,18 +81,21 @@ const Login = () => {
 
           <div className="relative">
             <input
-              type="text" // manual masking
+              type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Password"
-              value={displayPassword}
+              value={form.password}
               onChange={handleChange}
               required
               autoComplete="current-password"
               className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none pr-10"
             />
-            {showEye && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                <AiOutlineEye size={20} />
+            {eyeVisible && (
+              <span
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
               </span>
             )}
           </div>
