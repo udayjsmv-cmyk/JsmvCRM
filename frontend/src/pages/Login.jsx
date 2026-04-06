@@ -1,22 +1,16 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { AiOutlineEye } from "react-icons/ai";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [status, setStatus] = useState({ loading: false, error: "" });
 
-  const [status, setStatus] = useState({
-    loading: false,
-    error: "",
-  });
-
-  // State to hold the masked password for display
   const [displayPassword, setDisplayPassword] = useState("");
+  const [showEye, setShowEye] = useState(false);
   const maskTimeoutRef = useRef(null);
 
   const handleChange = (e) => {
@@ -26,18 +20,23 @@ const Login = () => {
       // Clear any previous timeout
       if (maskTimeoutRef.current) clearTimeout(maskTimeoutRef.current);
 
-      // Update real password
       setForm((prev) => ({ ...prev, password: value }));
 
-      // Show last character briefly
-      const masked =
-        "*".repeat(value.length - 1) + value.slice(-1); // mask all except last
-      setDisplayPassword(masked);
+      if (value.length > 0) {
+        // Show the last typed letter
+        const masked = "*".repeat(value.length - 1) + value.slice(-1);
+        setDisplayPassword(masked);
+        setShowEye(true);
 
-      // After 500ms, mask last character too
-      maskTimeoutRef.current = setTimeout(() => {
-        setDisplayPassword("*".repeat(value.length));
-      }, 500);
+        // Mask last letter after 500ms and hide the eye
+        maskTimeoutRef.current = setTimeout(() => {
+          setDisplayPassword("*".repeat(value.length));
+          setShowEye(false);
+        }, 500);
+      } else {
+        setDisplayPassword("");
+        setShowEye(false);
+      }
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
@@ -69,10 +68,7 @@ const Login = () => {
     } catch (err) {
       setStatus({
         loading: false,
-        error:
-          err.response?.data?.message ||
-          err.message ||
-          "Login failed",
+        error: err.response?.data?.message || err.message || "Login failed",
       });
       return;
     }
@@ -103,16 +99,23 @@ const Login = () => {
             className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           />
 
-          <input
-            type="text" // type text to allow masking manually
-            name="password"
-            placeholder="Password"
-            value={displayPassword}
-            onChange={handleChange}
-            required
-            autoComplete="current-password"
-            className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          />
+          <div className="relative">
+            <input
+              type="text" // manual masking
+              name="password"
+              placeholder="Password"
+              value={displayPassword}
+              onChange={handleChange}
+              required
+              autoComplete="current-password"
+              className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none pr-10"
+            />
+            {showEye && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                <AiOutlineEye size={20} />
+              </span>
+            )}
+          </div>
 
           <button
             type="submit"
