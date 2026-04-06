@@ -18,7 +18,7 @@ const app = express();
 // ✅ CORS for dev + deployed frontend
 const allowedOrigins = [
   "https://jsmv-crm.vercel.app", // production frontend
-  "http://localhost:3000"        // local dev frontend
+  "http://localhost:5173"        // local dev frontend
 ];
 
 app.use(cors({
