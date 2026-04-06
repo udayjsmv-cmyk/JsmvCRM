@@ -97,6 +97,7 @@ const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+         <p className="text-center font-semibold text-grey-800 py-2">@2026 ERP by UK </p>
       </div>
     </div>
   );
