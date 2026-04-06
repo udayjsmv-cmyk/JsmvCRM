@@ -8,11 +8,41 @@ const Sidebar = () => {
   const location = useLocation();
   const role = getUserRole();
 
-  // ✅ Role flags
-  const isAdmin = role === "admin";
-  const isManager = role === "manager";
-  const isPreparer = role === "preparer";
-  const isReviewer = role === "reviewer";
+  // ✅ Role-based access config
+  const roleConfig = {
+    admin: {
+      dashboard: true,
+      employees: true,
+      clients: true,
+      departments: ["calling", "prepare", "reviewer", "account", "payment"],
+    },
+    manager: {
+      dashboard: true,
+      employees: true,
+      clients: true,
+      departments: ["calling", "prepare", "reviewer", "account", "payment"],
+    },
+    employee: {
+      dashboard: false,
+      employees: false,
+      clients: false,
+      departments: ["calling"],
+    },
+    preparer: {
+      dashboard: false,
+      employees: false,
+      clients: false,
+      departments: ["prepare"],
+    },
+    reviewer: {
+      dashboard: false,
+      employees: false,
+      clients: false,
+      departments: ["reviewer"],
+    },
+  };
+
+  const permissions = roleConfig[role] || {};
 
   useEffect(() => {
     if (location.pathname.startsWith("/departments")) setDeptOpen(true);
@@ -28,6 +58,10 @@ const Sidebar = () => {
      }`;
 
   const isDepartmentActive = location.pathname.startsWith("/departments");
+
+  // ✅ Department label formatter
+  const formatLabel = (name) =>
+    name.charAt(0).toUpperCase() + name.slice(1);
 
   return (
     <div
@@ -45,9 +79,9 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex flex-col mt-4 space-y-2 flex-1 overflow-auto">
-        
-        {/* Dashboard (Admin & Manager only) */}
-        {(isAdmin || isManager) && (
+
+        {/* Dashboard */}
+        {permissions.dashboard && (
           <Link to="/dashboard" className={linkClasses("/dashboard")}>
             <i className="fa-solid fa-gauge mr-3 w-5"></i>
             {isOpen && "Dashboard"}
@@ -60,16 +94,16 @@ const Sidebar = () => {
           {isOpen && "Profile"}
         </Link>
 
-        {/* Employees (Admin & Manager) */}
-        {(isAdmin || isManager) && (
+        {/* Employees */}
+        {permissions.employees && (
           <Link to="/employees" className={linkClasses("/employees")}>
             <i className="fa-solid fa-users mr-3 w-5"></i>
             {isOpen && "Employees"}
           </Link>
         )}
 
-        {/* Clients (Admin & Manager) */}
-        {(isAdmin || isManager) && (
+        {/* Clients */}
+        {permissions.clients && (
           <Link to="/clients" className={linkClasses("/clients")}>
             <i className="fa-solid fa-user-tie mr-3 w-5"></i>
             {isOpen && "Clients"}
@@ -77,19 +111,17 @@ const Sidebar = () => {
         )}
 
         {/* Departments */}
-        {(isPreparer || isReviewer) ? (
+        {permissions.departments?.length === 1 ? (
+          // ✅ Single department (Employee / Preparer / Reviewer)
           <Link
-            to={isPreparer ? "/departments/prepare" : "/departments/reviewer"}
-            className={linkClasses(
-              isPreparer
-                ? "/departments/prepare"
-                : "/departments/reviewer"
-            )}
+            to={`/departments/${permissions.departments[0]}`}
+            className={linkClasses(`/departments/${permissions.departments[0]}`)}
           >
             <i className="fa-solid fa-building mr-3 w-5"></i>
-            {isOpen && (isPreparer ? "Prepare" : "Review")}
+            {isOpen && formatLabel(permissions.departments[0])}
           </Link>
-        ) : (
+        ) : permissions.departments?.length > 1 ? (
+          // ✅ Multiple departments (Admin / Manager)
           <>
             <button
               onClick={() => setDeptOpen(!deptOpen)}
@@ -114,42 +146,21 @@ const Sidebar = () => {
 
             {deptOpen && isOpen && (
               <div className="flex flex-col ml-8 space-y-1">
-                <Link
-                  to="/departments/calling"
-                  className={linkClasses("/departments/calling")}
-                >
-                  Calling
-                </Link>
-                <Link
-                  to="/departments/prepare"
-                  className={linkClasses("/departments/prepare")}
-                >
-                  Prepare
-                </Link>
-                <Link
-                  to="/departments/reviewer"
-                  className={linkClasses("/departments/reviewer")}
-                >
-                  Review
-                </Link>
-                <Link
-                  to="/departments/account"
-                  className={linkClasses("/departments/account")}
-                >
-                  Account
-                </Link>
-                <Link
-                  to="/departments/payment"
-                  className={linkClasses("/departments/payment")}
-                >
-                  Payment
-                </Link>
+                {permissions.departments.map((dept) => (
+                  <Link
+                    key={dept}
+                    to={`/departments/${dept}`}
+                    className={linkClasses(`/departments/${dept}`)}
+                  >
+                    {formatLabel(dept)}
+                  </Link>
+                ))}
               </div>
             )}
           </>
-        )}
+        ) : null}
 
-        {/* Settings (All roles) */}
+        {/* Settings */}
         <Link to="/settings" className={linkClasses("/settings")}>
           <i className="fa-solid fa-cog mr-3 w-5"></i>
           {isOpen && "Settings"}
