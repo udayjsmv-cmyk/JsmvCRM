@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai"; // npm i react-icons
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,14 +15,32 @@ const Login = () => {
     error: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false); // ✅ new state for eye toggle
+  // State to hold the masked password for display
+  const [displayPassword, setDisplayPassword] = useState("");
+  const maskTimeoutRef = useRef(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    if (name === "password") {
+      // Clear any previous timeout
+      if (maskTimeoutRef.current) clearTimeout(maskTimeoutRef.current);
+
+      // Update real password
+      setForm((prev) => ({ ...prev, password: value }));
+
+      // Show last character briefly
+      const masked =
+        "*".repeat(value.length - 1) + value.slice(-1); // mask all except last
+      setDisplayPassword(masked);
+
+      // After 500ms, mask last character too
+      maskTimeoutRef.current = setTimeout(() => {
+        setDisplayPassword("*".repeat(value.length));
+      }, 500);
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -86,24 +103,16 @@ const Login = () => {
             className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           />
 
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"} // 🔑 toggle
-              name="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              autoComplete="current-password"
-              className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none pr-10"
-            />
-            <span
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
-              onClick={() => setShowPassword((prev) => !prev)}
-            >
-              {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
-            </span>
-          </div>
+          <input
+            type="text" // type text to allow masking manually
+            name="password"
+            placeholder="Password"
+            value={displayPassword}
+            onChange={handleChange}
+            required
+            autoComplete="current-password"
+            className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          />
 
           <button
             type="submit"
