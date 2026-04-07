@@ -74,7 +74,7 @@ const uploadToGridFS = async (file, user) => {
 };
 const profileUpload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 2MB limit
+  limits: { fileSize: .5 * 1024 * 1024 }, // 2MB limit
 });
 module.exports = {
   upload,
