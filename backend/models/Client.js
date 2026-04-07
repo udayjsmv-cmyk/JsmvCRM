@@ -48,7 +48,7 @@ const DocumentSchema = new mongoose.Schema(
     },
     teamName: { type: String },
     uploadedAt: { type: Date, default: Date.now },
-
+    reviewNotes: { type: String, default: "" },
     version: {
       type: String,
       enum: ["original", "updated"],

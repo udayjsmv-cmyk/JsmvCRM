@@ -97,7 +97,10 @@ exports.uploadUpdatedDocument = async (req, res) => {
       status: "in-preparation", // 🔹 Updated doc is automatically in preparation
       forwardedToPreparationDate: new Date(),
     };
-
+    // ✅ Ensure documents array exists
+    if (!Array.isArray(client.documents)) {
+      client.documents = [];
+    }
     client.documents.push(newDoc);
     client.handledByPreparer = req.user._id;
     client.forwardedToPreparation = true;

@@ -153,8 +153,13 @@ exports.returnToPreparer = async (req, res) => {
     const client = await Client.findById(id);
     if (!client) return res.status(404).json({ message: "Client not found" });
 
-    client.forwardedToReviewer = false;
-    client.returnedToPreparation = true;
+    // ✅ Update documents (IMPORTANT)
+    client.documents.forEach((doc) => {
+      doc.status = "corrections"; // triggers schema logic
+      doc.returnedToPreparationDate = new Date();
+      doc.reviewNotes = reason || "Corrections required";
+    });
+    client.markModified("documents");
     client.reviewedBy = req.user._id;
     client.reviewedDate = new Date();
     client.reviewStatus = "returned";

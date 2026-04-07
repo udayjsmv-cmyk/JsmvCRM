@@ -18,15 +18,15 @@ const Badge = ({ children, tone = "gray" }) => {
 
 const IconRefresh = (props) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" {...props}>
-    <path d="M21 12a9 9 0 10-3.16 6.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M21 3v6h-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M21 12a9 9 0 10-3.16 6.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M21 3v6h-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const IconForward = (props) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" {...props}>
-    <path d="M4 12h13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M14 8l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M4 12h13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M14 8l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -63,8 +63,8 @@ export default function Preparer() {
       // For each client: sort docs so returned first, then updated, then original (recent first)
       const clientList = Object.values(grouped).map((c) => {
         const docsSorted = [...c.documents].sort((a, b) => {
-        const aReturned = a.status === "returned";
-        const bReturned = b.status === "returned";
+          const aReturned = a.status === "returned";
+          const bReturned = b.status === "returned";
           if (aReturned !== bReturned) return aReturned ? -1 : 1; // returned first
           // prefer updated over original
           const aUpdated = a.version === "updated";
@@ -186,10 +186,10 @@ export default function Preparer() {
 
   // render doc status
   const renderDocStatus = (doc) => {
-  if (doc.status === "returned") return <Badge tone="red">Returned</Badge>;
-  if (doc.status === "forwarded-review") return <Badge tone="green">Forwarded</Badge>;
-  return <Badge tone="yellow">Pending</Badge>;
-};
+    if (["returned", "corrections"].includes(doc.status)) return <Badge tone="red">Returned</Badge>;
+    if (doc.status === "forwarded-review") return <Badge tone="green">Forwarded</Badge>;
+    return <Badge tone="yellow">Pending</Badge>;
+  };
 
   // small helper for uploadedBy display
   const uploaderLabel = (u) => {
@@ -230,9 +230,8 @@ export default function Preparer() {
           {clients.map((client) => (
             <div
               key={client.clientId}
-              className={`p-4 rounded-xl shadow-sm border transition ${
-                client.hasReturned ? "bg-red-50 border-red-200" : "bg-white border-gray-200"
-              }`}
+              className={`p-4 rounded-xl shadow-sm border transition ${client.hasReturned ? "bg-red-50 border-red-200" : "bg-white border-gray-200"
+                }`}
             >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
@@ -263,8 +262,6 @@ export default function Preparer() {
                   </button>
                 </div>
               </div>
-
-              {/* documents table */}
               <div className="mt-4">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -276,49 +273,105 @@ export default function Preparer() {
                         <th className="p-2 text-left">Team</th>
                         <th className="p-2 text-left">Uploaded At</th>
                         <th className="p-2 text-center">Status</th>
+                        <th className="p-2 text-left">Reviewer Info</th>
                         <th className="p-2 text-center">Actions</th>
                         <th className="p-2 text-center">Update</th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {client.documents.map((doc) => {
                         const staged = stagedFiles[doc.fileId];
                         const uploading = uploadingFor === doc.fileId;
+
                         return (
-                          <tr key={doc.fileId} className="border-b hover:bg-gray-50">
+                          <tr
+                            key={doc.fileId}
+                            className={`border-b hover:bg-gray-50 ${["returned", "corrections"].includes(doc.status) ? "bg-red-50" : ""
+                              }`}
+                          >
+                            {/* Document */}
                             <td className="p-2">
                               <div className="flex flex-col">
-                                <div className="font-medium text-gray-800">{doc.fileName}</div>
-                                <div className="text-xs text-gray-400">{doc.fileId}</div>
-                                {doc.status === "returned" && doc.reviewNotes && (
-                                  <div className="mt-2 p-2 bg-red-100 border border-red-200 rounded text-xs text-red-800">
-                                    <strong>Reason:</strong> {doc.reviewNotes}
-                                  </div>
-                                )}
+                                <span className="font-medium text-gray-800">
+                                  {doc.fileName}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {doc.fileId}
+                                </span>
                               </div>
                             </td>
 
+                            {/* Version */}
                             <td className="p-2">
                               <Badge tone={doc.version === "updated" ? "indigo" : "gray"}>
                                 {doc.version === "updated" ? "Updated" : "Original"}
                               </Badge>
                             </td>
 
+                            {/* Uploaded By */}
                             <td className="p-2">
                               <div className="text-sm">{uploaderLabel(doc.uploadedBy)}</div>
-                              <div className="text-xs text-gray-400">{doc.uploadedBy?.email || ""}</div>
+                              <div className="text-xs text-gray-400">
+                                {doc.uploadedBy?.email || ""}
+                              </div>
                             </td>
 
+                            {/* Team */}
                             <td className="p-2">
-                              <div className="text-sm">{doc.uploadedBy?.teamName || "—"}</div>
+                              <div className="text-sm">
+                                {doc.uploadedBy?.teamName || "—"}
+                              </div>
                             </td>
 
+                            {/* Uploaded At */}
                             <td className="p-2">
-                              <div className="text-sm">{doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString() : "—"}</div>
+                              <div className="text-sm">
+                                {doc.uploadedAt
+                                  ? new Date(doc.uploadedAt).toLocaleString()
+                                  : "—"}
+                              </div>
                             </td>
 
-                            <td className="p-2 text-center">{renderDocStatus(doc)}</td>
+                            {/* Status */}
+                            <td className="p-2 text-center">
+                              {["returned", "corrections"].includes(doc.status) ? (
+                                <Badge tone="red">Returned</Badge>
+                              ) : doc.status === "forwarded-review" ? (
+                                <Badge tone="green">Forwarded</Badge>
+                              ) : (
+                                <Badge tone="yellow">Pending</Badge>
+                              )}
+                            </td>
 
+                            {/* 🔥 Reviewer Info (MAIN FEATURE) */}
+                            <td className="p-2">
+                              {["returned", "corrections"].includes(doc.status) ? (
+                                <div className="text-xs text-red-800 bg-red-100 border border-red-200 rounded p-2 space-y-1">
+
+                                  <div className="font-semibold flex items-center gap-1">
+                                    ⚠️ Returned
+                                  </div>
+
+                                  <div>
+                                    <span className="font-medium">Remarks:</span>{" "}
+                                    {doc.reviewNotes || "No remarks"}
+                                  </div>
+
+                                  <div>
+                                    <span className="font-medium">Returned On:</span>{" "}
+                                    {doc.returnedToPreparationDate
+                                      ? new Date(doc.returnedToPreparationDate).toLocaleString()
+                                      : "Not available"}
+                                  </div>
+
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 text-xs">—</span>
+                              )}
+                            </td>
+
+                            {/* Actions */}
                             <td className="p-2 text-center space-x-2">
                               <button
                                 onClick={() => openPreview(doc.fileId, doc.fileName)}
@@ -326,6 +379,7 @@ export default function Preparer() {
                               >
                                 Preview
                               </button>
+
                               <button
                                 onClick={() => downloadFile(doc.fileId)}
                                 className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
@@ -334,39 +388,50 @@ export default function Preparer() {
                               </button>
                             </td>
 
+                            {/* Update */}
                             <td className="p-2 text-center">
                               <div className="flex flex-col items-center">
-                                <label className="flex items-center gap-2 cursor-pointer px-2 py-1 border rounded text-xs bg-white hover:bg-gray-50">
+
+                                <label className="cursor-pointer px-2 py-1 border rounded text-xs bg-white hover:bg-gray-50">
                                   <input
                                     type="file"
-                                    accept="*/*"
-                                    onChange={(e) => stageFileForDoc(doc.fileId, e.target.files?.[0])}
+                                    onChange={(e) =>
+                                      stageFileForDoc(doc.fileId, e.target.files?.[0])
+                                    }
                                     className="hidden"
                                   />
-                                  <span className="text-xs">Choose</span>
+                                  Choose
                                 </label>
 
                                 <button
-                                  onClick={() => uploadUpdatedForDoc(client.clientId, doc.fileId)}
+                                  onClick={() =>
+                                    uploadUpdatedForDoc(client.clientId, doc.fileId)
+                                  }
                                   disabled={!staged || uploading}
-                                  className={`mt-2 px-3 py-1 rounded text-sm text-white ${staged ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-300 cursor-not-allowed"}`}
+                                  className={`mt-2 px-3 py-1 rounded text-sm text-white ${staged
+                                      ? "bg-indigo-600 hover:bg-indigo-700"
+                                      : "bg-gray-300 cursor-not-allowed"
+                                    }`}
                                 >
                                   {uploading ? "Uploading..." : "Upload"}
                                 </button>
 
-                                {/* progress bar */}
-                                {uploadProgress[doc.fileId] ? (
-                                  <div className="w-28 mt-2 bg-gray-100 rounded-full h-2 overflow-hidden">
+                                {/* Progress */}
+                                {uploadProgress[doc.fileId] && (
+                                  <div className="w-28 mt-2 bg-gray-100 rounded-full h-2">
                                     <div
                                       className="h-2 bg-indigo-600"
-                                      style={{ width: `${uploadProgress[doc.fileId]}%` }}
+                                      style={{
+                                        width: `${uploadProgress[doc.fileId]}%`,
+                                      }}
                                     />
                                   </div>
-                                ) : null}
+                                )}
 
                                 <div className="mt-1 text-xs text-gray-500">
                                   {staged ? staged.name : "No file"}
                                 </div>
+
                               </div>
                             </td>
                           </tr>
