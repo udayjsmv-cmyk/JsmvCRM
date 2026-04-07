@@ -87,6 +87,7 @@ const Sidebar = () => {
             {isOpen && "Dashboard"}
           </Link>
         )}
+
         {/* Employees */}
         {permissions.employees && (
           <Link to="/employees" className={linkClasses("/employees")}>
