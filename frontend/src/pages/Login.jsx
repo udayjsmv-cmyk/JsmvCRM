@@ -1,31 +1,29 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [status, setStatus] = useState({ loading: false, error: "" });
 
-  const [status, setStatus] = useState({
-    loading: false,
-    error: "",
-  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [eyeVisible, setEyeVisible] = useState(false); // will appear after first letter
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    setForm((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "password" && value.length > 0) {
+      setEyeVisible(true); // show eye permanently after first letter
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setStatus({ loading: true, error: "" });
 
     try {
@@ -36,11 +34,9 @@ const Login = () => {
 
       const { token, user } = data;
 
-      // 🔐 Better: centralize this later in auth context
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // 🚀 Cleaner role routing
       const roleRoutes = {
         admin: "/admin",
         manager: "/manager",
@@ -52,10 +48,7 @@ const Login = () => {
     } catch (err) {
       setStatus({
         loading: false,
-        error:
-          err.response?.data?.message ||
-          err.message ||
-          "Login failed",
+        error: err.response?.data?.message || err.message || "Login failed",
       });
       return;
     }
@@ -71,9 +64,7 @@ const Login = () => {
         </h2>
 
         {status.error && (
-          <p className="text-red-500 text-center mb-4">
-            {status.error}
-          </p>
+          <p className="text-red-500 text-center mb-4">{status.error}</p>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -88,16 +79,26 @@ const Login = () => {
             className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           />
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            autoComplete="current-password"
-            className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              autoComplete="current-password"
+              className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none pr-10"
+            />
+            {eyeVisible && (
+              <span
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+              </span>
+            )}
+          </div>
 
           <button
             type="submit"
@@ -107,7 +108,10 @@ const Login = () => {
             {status.loading ? "Logging in..." : "Login"}
           </button>
         </form>
-        <p className="text-center font-semibold text-grey-800 py-2">@2026 ERP by UK </p>
+
+        <p className="text-center font-semibold text-grey-800 py-2">
+          @2026 ERP by UK
+        </p>
       </div>
     </div>
   );
