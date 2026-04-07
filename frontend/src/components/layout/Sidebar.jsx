@@ -23,7 +23,7 @@ const Sidebar = () => {
       departments: ["calling", "prepare", "reviewer", "account", "payment"],
     },
     employee: {
-      dashboard: false,
+      dashboard: true, // ✅ Dashboard enabled for employee
       employees: false,
       clients: false,
       departments: ["calling"],
@@ -109,9 +109,7 @@ const Sidebar = () => {
           // ✅ Single department
           <Link
             to={`/departments/${permissions.departments[0]}`}
-            className={linkClasses(
-              `/departments/${permissions.departments[0]}`
-            )}
+            className={linkClasses(`/departments/${permissions.departments[0]}`)}
           >
             <i className="fa-solid fa-building mr-3 w-5"></i>
             {isOpen && formatLabel(permissions.departments[0])}
