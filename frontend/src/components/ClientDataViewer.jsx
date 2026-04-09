@@ -40,7 +40,7 @@ const ClientDataViewer = ({ title, role, currentUser, division, fetchLeads }) =>
         } else {
           res = await api.get("/clients");
         }
-      }
+      }  
 
       const leads = Array.isArray(res.data) ? res.data : [];
       setData(leads);

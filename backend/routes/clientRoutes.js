@@ -4,7 +4,7 @@ const router = express.Router();
 const { requireAuth, allowRoles } = require("../middleware/authMiddleware");
 const { upload, uploadToGridFS } = require("../middleware/uploadMiddleware");
 const client = require("../controllers/clientController");
-
+console.log("UPLOAD VALUE:",upload);
 const {
   uploadLeads,
   assignFromUnassigned,
@@ -31,7 +31,6 @@ router.post(
   requireAuth,
   allowRoles("manager"),
   upload.single("file"),
-  uploadToGridFS, // ✅ IMPORTANT FIX
   uploadLeads
 );
 

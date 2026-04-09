@@ -5,6 +5,7 @@ const ActivityLog = require("../models/ActivityLog");
 const { parseLeadsFromBuffer } = require("../services/parseService");
 const { roundRobinAssign } = require("../services/assignmentService");
 const mongoose = require("mongoose");
+const {uploadToGridFS} = require("../middleware/uploadMiddleware");
 
 const respondError = (res, status = 500, message = "Server error", err = null) => {
   if (err) console.error(message + ":", err);
@@ -93,12 +94,15 @@ exports.uploadLeads = async (req, res) => {
     if (!division || !allowedDivisions.includes(division)) {
       return res.status(400).json({ message: "Invalid or missing division" });
     }
+    if (!req.file || !req.file.buffer) {
+        return res.status(400).json({ message: "File is missing or invalid" });
+      }
 
-    // ===== Parse Leads =====
-    let leads = [];
-    if (req.file?.buffer) {
-      leads = await parseLeadsFromBuffer(req.file.buffer);
-    }
+      let leads = await parseLeadsFromBuffer(req.file.buffer);
+
+      if (!Array.isArray(leads)) {
+        return res.status(500).json({ message: "Parsing failed" });
+      }
 
     if (!leads.length) {
       return res.status(400).json({ message: "No valid leads found in file" });
@@ -326,28 +330,42 @@ exports.getMyLeads = async (req, res) => {
   }
 };
 
-// Upload client document
 exports.uploadClientDocument = async (req, res) => {
   try {
     const { id: clientId } = req.params;
     const file = req.file;
+
     if (!file) return res.status(400).json({ message: "No file uploaded" });
-    if (!file.id) return res.status(500).json({ message: "File not persisted to GridFS" });
-    if (!ALLOWED_TYPES.includes(file.mimetype)) return res.status(400).json({ message: "Invalid file type" });
-    if (file.size && file.size > MAX_FILE_SIZE) return res.status(400).json({ message: "File too large (max 20MB)" });
+
+    if (!ALLOWED_TYPES.includes(file.mimetype)) {
+      return res.status(400).json({ message: "Invalid file type" });
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return res.status(400).json({ message: "File too large" });
+    }
+
+    const uploadedFile = await uploadToGridFS(file, req.user);
+
+    if (!uploadedFile || !uploadedFile.fileId) {
+      return res.status(500).json({ message: "File upload failed" });
+    }
 
     const client = await Client.findById(clientId);
     if (!client) return res.status(404).json({ message: "Client not found" });
 
     const privileged = isPrivileged(req.user);
     const isAssignee = client.assignedTo?.toString() === req.user._id.toString();
-    if (!privileged && !isAssignee) return res.status(403).json({ message: "Not authorized to upload documents" });
+
+    if (!privileged && !isAssignee) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
 
     const newDocument = {
-      fileId: file.id,
-      fileName: file.originalname,
-      fileType: file.mimetype,
-      fileUrl: `/api/files/download/${file.id}`,
+      fileId: uploadedFile.fileId,
+      fileName: uploadedFile.fileName,
+      fileType: uploadedFile.fileType,
+      fileUrl: uploadedFile.fileUrl,
       description: req.body.description || "",
       uploadedBy: req.user._id,
       teamName: req.user.teamName || null,
@@ -358,6 +376,7 @@ exports.uploadClientDocument = async (req, res) => {
     };
 
     client.documents.push(newDocument);
+
     client.actionHistory.push({
       action: "Document Uploaded",
       performedBy: req.user._id,
@@ -368,7 +387,6 @@ exports.uploadClientDocument = async (req, res) => {
     client.updatedBy = req.user._id;
     client.updatedAt = new Date();
 
-    // markModified to ensure nested array change persisted
     client.markModified("documents");
 
     await client.save();
@@ -381,9 +399,13 @@ exports.uploadClientDocument = async (req, res) => {
       details: { fileName: newDocument.fileName },
     });
 
-    return res.status(201).json({ message: "Document uploaded", document: newDocument });
+    res.status(201).json({
+      message: "Document uploaded",
+      document: newDocument,
+    });
   } catch (err) {
-    return respondError(res, 500, "Error uploading document", err);
+    console.error("Upload error:", err);
+    res.status(500).json({ message: "Error uploading document", error: err.message });
   }
 };
 
@@ -1428,11 +1450,11 @@ exports.getDocumentPreview = async (req, res) => {
     }
 
     const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
-      bucketName: "fs", // default
+      bucketName: "clientDocuments", // default
     });
 
     const files = await mongoose.connection.db
-      .collection("fs.files")
+      .collection("clientDocuments.files")
       .find({ _id: new mongoose.Types.ObjectId(fileId) })
       .toArray();
 
@@ -1443,8 +1465,10 @@ exports.getDocumentPreview = async (req, res) => {
     const file = files[0];
 
     // ✅ Set correct content type
-    res.set({"Content-Type":"application/pdf","Content-Disposition":"inline"});
-
+   res.set({
+      "Content-Type": file.contentType || "application/octet-stream",
+      "Content-Disposition": "inline"
+    });
     // ✅ STREAM FILE
     const downloadStream = bucket.openDownloadStream(
       new mongoose.Types.ObjectId(fileId)

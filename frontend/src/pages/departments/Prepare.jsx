@@ -262,185 +262,186 @@ export default function Preparer() {
                   </button>
                 </div>
               </div>
-              <div className="mt-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 text-gray-700">
-                      <tr>
-                        <th className="p-2 text-left">Document</th>
-                        <th className="p-2 text-left">Version</th>
-                        <th className="p-2 text-left">Uploaded By</th>
-                        <th className="p-2 text-left">Team</th>
-                        <th className="p-2 text-left">Uploaded At</th>
-                        <th className="p-2 text-center">Status</th>
-                        <th className="p-2 text-left">Reviewer Info</th>
-                        <th className="p-2 text-center">Actions</th>
-                        <th className="p-2 text-center">Update</th>
-                      </tr>
-                    </thead>
+              <div className="mt-5">
+  <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm bg-white">
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border-collapse">
+        
+        {/* HEADER */}
+        <thead className="bg-gradient-to-r from-gray-50 to-gray-100 sticky top-0 z-10 backdrop-blur">
+          <tr className="text-gray-600 text-xs uppercase tracking-wider">
+            <th className="px-4 py-3 text-left">Document</th>
+            <th className="px-4 py-3 text-left">Version</th>
+            <th className="px-4 py-3 text-left">Uploader</th>
+            <th className="px-4 py-3 text-left">Team</th>
+            <th className="px-4 py-3 text-left">Date</th>
+            <th className="px-4 py-3 text-center">Status</th>
+            <th className="px-4 py-3 text-left">Reviewer</th>
+            <th className="px-4 py-3 text-center">Actions</th>
+            <th className="px-4 py-3 text-center">Update</th>
+          </tr>
+        </thead>
 
-                    <tbody>
-                      {client.documents.map((doc) => {
-                        const staged = stagedFiles[doc.fileId];
-                        const uploading = uploadingFor === doc.fileId;
+        {/* BODY */}
+        <tbody className="divide-y divide-gray-100">
+          {client.documents.map((doc, index) => {
+            const staged = stagedFiles[doc.fileId];
+            const uploading = uploadingFor === doc.fileId;
 
-                        return (
-                          <tr
-                            key={doc.fileId}
-                            className={`border-b hover:bg-gray-50 ${["returned", "corrections"].includes(doc.status) ? "bg-red-50" : ""
-                              }`}
-                          >
-                            {/* Document */}
-                            <td className="p-2">
-                              <div className="flex flex-col">
-                                <span className="font-medium text-gray-800">
-                                  {doc.fileName}
-                                </span>
-                                <span className="text-xs text-gray-400">
-                                  {doc.fileId}
-                                </span>
-                              </div>
-                            </td>
+            return (
+              <tr
+                key={doc.fileId}
+                className={`group transition-all duration-200 
+                ${index % 2 === 0 ? "bg-white" : "bg-gray-50/40"} 
+                hover:bg-indigo-50/40`}
+              >
 
-                            {/* Version */}
-                            <td className="p-2">
-                              <Badge tone={doc.version === "updated" ? "indigo" : "gray"}>
-                                {doc.version === "updated" ? "Updated" : "Original"}
-                              </Badge>
-                            </td>
+                {/* DOCUMENT */}
+                <td className="px-4 py-3">
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-gray-800 group-hover:text-indigo-700">
+                      {doc.fileName}
+                    </span>
+                    <span className="text-[11px] text-gray-400">
+                      {doc.fileId}
+                    </span>
+                  </div>
+                </td>
 
-                            {/* Uploaded By */}
-                            <td className="p-2">
-                              <div className="text-sm">{uploaderLabel(doc.uploadedBy)}</div>
-                              <div className="text-xs text-gray-400">
-                                {doc.uploadedBy?.email || ""}
-                              </div>
-                            </td>
+                {/* VERSION */}
+                <td className="px-4 py-3">
+                  <Badge tone={doc.version === "updated" ? "indigo" : "gray"}>
+                    {doc.version === "updated" ? "Updated" : "Original"}
+                  </Badge>
+                </td>
 
-                            {/* Team */}
-                            <td className="p-2">
-                              <div className="text-sm">
-                                {doc.uploadedBy?.teamName || "—"}
-                              </div>
-                            </td>
+                {/* UPLOADER */}
+                <td className="px-4 py-3">
+                  <div className="font-medium text-gray-700">
+                    {uploaderLabel(doc.uploadedBy)}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {doc.uploadedBy?.email}
+                  </div>
+                </td>
 
-                            {/* Uploaded At */}
-                            <td className="p-2">
-                              <div className="text-sm">
-                                {doc.uploadedAt
-                                  ? new Date(doc.uploadedAt).toLocaleString()
-                                  : "—"}
-                              </div>
-                            </td>
+                {/* TEAM */}
+                <td className="px-4 py-3 text-gray-600">
+                  {doc.uploadedBy?.teamName || "—"}
+                </td>
 
-                            {/* Status */}
-                            <td className="p-2 text-center">
-                              {["returned", "corrections"].includes(doc.status) ? (
-                                <Badge tone="red">Returned</Badge>
-                              ) : doc.status === "forwarded-review" ? (
-                                <Badge tone="green">Forwarded</Badge>
-                              ) : (
-                                <Badge tone="yellow">Pending</Badge>
-                              )}
-                            </td>
+                {/* DATE */}
+                <td className="px-4 py-3 text-gray-600">
+                  {doc.uploadedAt
+                    ? new Date(doc.uploadedAt).toLocaleString()
+                    : "—"}
+                </td>
 
-                            {/* 🔥 Reviewer Info (MAIN FEATURE) */}
-                            <td className="p-2">
-                              {["returned", "corrections"].includes(doc.status) ? (
-                                <div className="text-xs text-red-800 bg-red-100 border border-red-200 rounded p-2 space-y-1">
+                {/* STATUS */}
+                <td className="px-4 py-3 text-center">
+                  {renderDocStatus(doc)}
+                </td>
 
-                                  <div className="font-semibold flex items-center gap-1">
-                                    ⚠️ Returned
-                                  </div>
+                {/* REVIEWER */}
+                <td className="px-4 py-3">
+                  {["returned", "corrections"].includes(doc.status) ? (
+                    <div className="text-xs bg-red-50 border border-red-200 rounded-lg p-3 space-y-1 shadow-sm">
+                      <div className="font-semibold text-red-700">
+                        Needs Fix
+                      </div>
+                      <div className="text-gray-700">
+                        {doc.reviewNotes || "No remarks"}
+                      </div>
+                      <div className="text-gray-400 text-[11px]">
+                        {doc.returnedToPreparationDate
+                          ? new Date(doc.returnedToPreparationDate).toLocaleString()
+                          : ""}
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-gray-300">—</span>
+                  )}
+                </td>
 
-                                  <div>
-                                    <span className="font-medium">Remarks:</span>{" "}
-                                    {doc.reviewNotes || "No remarks"}
-                                  </div>
+                {/* ACTIONS */}
+                <td className="px-4 py-3 text-center">
+                  <div className="flex justify-center gap-2 opacity-80 group-hover:opacity-100 transition">
 
-                                  <div>
-                                    <span className="font-medium">Returned On:</span>{" "}
-                                    {doc.returnedToPreparationDate
-                                      ? new Date(doc.returnedToPreparationDate).toLocaleString()
-                                      : "Not available"}
-                                  </div>
+                    <button
+                      onClick={() => openPreview(doc.fileId, doc.fileName)}
+                      className="px-3 py-1.5 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-medium"
+                    >
+                      Preview
+                    </button>
 
-                                </div>
-                              ) : (
-                                <span className="text-gray-400 text-xs">—</span>
-                              )}
-                            </td>
+                    <button
+                      onClick={() => downloadFile(doc.fileId)}
+                      className="px-3 py-1.5 rounded-md bg-emerald-50 text-emerald-600 hover:bg-emerald-100 text-xs font-medium"
+                    >
+                      Download
+                    </button>
 
-                            {/* Actions */}
-                            <td className="p-2 text-center space-x-2">
-                              <button
-                                onClick={() => openPreview(doc.fileId, doc.fileName)}
-                                className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
-                              >
-                                Preview
-                              </button>
+                  </div>
+                </td>
 
-                              <button
-                                onClick={() => downloadFile(doc.fileId)}
-                                className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
-                              >
-                                Download
-                              </button>
-                            </td>
+                {/* UPDATE */}
+                <td className="px-4 py-3 text-center">
+                  <div className="flex flex-col items-center gap-2">
 
-                            {/* Update */}
-                            <td className="p-2 text-center">
-                              <div className="flex flex-col items-center">
+                    {/* FILE PICK */}
+                    <label className="cursor-pointer text-xs px-3 py-1.5 rounded-md border bg-white hover:bg-gray-50 shadow-sm">
+                      Choose
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          stageFileForDoc(doc.fileId, e.target.files?.[0])
+                        }
+                        className="hidden"
+                      />
+                    </label>
 
-                                <label className="cursor-pointer px-2 py-1 border rounded text-xs bg-white hover:bg-gray-50">
-                                  <input
-                                    type="file"
-                                    onChange={(e) =>
-                                      stageFileForDoc(doc.fileId, e.target.files?.[0])
-                                    }
-                                    className="hidden"
-                                  />
-                                  Choose
-                                </label>
+                    {/* UPLOAD BTN */}
+                    <button
+                      onClick={() =>
+                        uploadUpdatedForDoc(client.clientId, doc.fileId)
+                      }
+                      disabled={!staged || uploading}
+                      className={`w-full px-3 py-1.5 rounded-md text-xs font-medium text-white transition
+                        ${staged
+                          ? "bg-indigo-600 hover:bg-indigo-700 shadow"
+                          : "bg-gray-300 cursor-not-allowed"
+                        }`}
+                    >
+                      {uploading ? "Uploading..." : "Upload"}
+                    </button>
 
-                                <button
-                                  onClick={() =>
-                                    uploadUpdatedForDoc(client.clientId, doc.fileId)
-                                  }
-                                  disabled={!staged || uploading}
-                                  className={`mt-2 px-3 py-1 rounded text-sm text-white ${staged
-                                      ? "bg-indigo-600 hover:bg-indigo-700"
-                                      : "bg-gray-300 cursor-not-allowed"
-                                    }`}
-                                >
-                                  {uploading ? "Uploading..." : "Upload"}
-                                </button>
+                    {/* PROGRESS */}
+                    {uploadProgress[doc.fileId] && (
+                      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 transition-all"
+                          style={{
+                            width: `${uploadProgress[doc.fileId]}%`,
+                          }}
+                        />
+                      </div>
+                    )}
 
-                                {/* Progress */}
-                                {uploadProgress[doc.fileId] && (
-                                  <div className="w-28 mt-2 bg-gray-100 rounded-full h-2">
-                                    <div
-                                      className="h-2 bg-indigo-600"
-                                      style={{
-                                        width: `${uploadProgress[doc.fileId]}%`,
-                                      }}
-                                    />
-                                  </div>
-                                )}
+                    <div className="text-[11px] text-gray-400 truncate max-w-[120px]">
+                      {staged ? staged.name : "No file"}
+                    </div>
 
-                                <div className="mt-1 text-xs text-gray-500">
-                                  {staged ? staged.name : "No file"}
-                                </div>
+                  </div>
+                </td>
 
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
             </div>
           ))}
         </div>

@@ -11,7 +11,7 @@ const Navbar = () => {
   const [profilePic, setProfilePic] = useState("");
   const dropdownRef = useRef();
 
-  // ✅ Fetch profile image
+  // ✅ Fetch profile image (FIXED)
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -23,12 +23,14 @@ const Navbar = () => {
 
         const data = res.data?.user || res.data;
 
-        if (data.profilePic?.fileUrl) {
-          const baseUrl = API_BASE.replace("/api", "");
-          setProfilePic(`${baseUrl}${data.profilePic.fileUrl}`);
+        if (data?._id) {
+          // ✅ Use backend image route (NO token needed)
+          setProfilePic(
+            `${API_BASE}/auth/profile-pic/${data._id}?t=${Date.now()}`
+          );
         }
       } catch (err) {
-        console.error(err);
+        console.error("Navbar profile fetch error:", err);
       }
     };
 
@@ -61,7 +63,10 @@ const Navbar = () => {
           src={profilePic || "/default-avatar.png"}
           alt="profile"
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="w-10 h-10 rounded-full cursor-pointer border-2 border-white"
+          onError={(e) => {
+            e.target.src = "/default-avatar.png"; // ✅ fallback
+          }}
+          className="w-10 h-10 rounded-full cursor-pointer border-2 border-white object-cover"
         />
 
         {/* Dropdown */}

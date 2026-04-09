@@ -144,7 +144,7 @@ exports.getReviewed = async (req, res) => {
 exports.returnToPreparer = async (req, res) => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const { reason, documentIds } = req.body;
 
     if (req.user.role !== "reviewer") {
       return res.status(403).json({ message: "Only Reviewer can return to Preparer" });
@@ -153,13 +153,31 @@ exports.returnToPreparer = async (req, res) => {
     const client = await Client.findById(id);
     if (!client) return res.status(404).json({ message: "Client not found" });
 
-    // ✅ Update documents (IMPORTANT)
-    client.documents.forEach((doc) => {
-      doc.status = "corrections"; // triggers schema logic
+    // ✅ Filter only relevant docs
+    const docsToReturn = client.documents.filter((doc) => {
+      if (documentIds && documentIds.length) {
+        return documentIds.includes(doc.fileId.toString());
+      }
+      return doc.status === "forwarded-review"; // fallback
+    });
+
+    if (!docsToReturn.length) {
+      return res.status(400).json({ message: "No valid documents to return" });
+    }
+
+    // ✅ Update only selected docs
+    docsToReturn.forEach((doc) => {
+      doc.status = "corrections";
       doc.returnedToPreparationDate = new Date();
       doc.reviewNotes = reason || "Corrections required";
     });
+
     client.markModified("documents");
+
+    // ✅ VERY IMPORTANT: Reset workflow
+    client.forwardedToReviewer = false;
+    client.forwardedToReviewerDate = null;
+
     client.reviewedBy = req.user._id;
     client.reviewedDate = new Date();
     client.reviewStatus = "returned";
@@ -182,12 +200,19 @@ exports.returnToPreparer = async (req, res) => {
       action: "return_to_preparer",
       targetCollection: "Client",
       targetId: client._id,
-      details: { reason },
+      details: { reason, documentIds },
     });
 
-    return res.status(200).json({ message: "Client returned to preparer", client });
+    return res.status(200).json({
+      message: "Documents returned to preparer",
+      returnedDocs: docsToReturn.length,
+      client,
+    });
   } catch (err) {
     console.error("❌ returnToPreparer error:", err);
-    return res.status(500).json({ message: "Error returning client to preparer", error: err.message });
+    return res.status(500).json({
+      message: "Error returning client to preparer",
+      error: err.message,
+    });
   }
 };

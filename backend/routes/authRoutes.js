@@ -12,12 +12,14 @@ router.post("/login", authController.login);
 router.get("/team", requireAuth, authController.getMyTeam);
 router.get("/profile",requireAuth,authController.getMyprofile);
 router.put("/profile", requireAuth, authController.updateProfile);
-router.put(
+router.post(
   "/profile-pic",
   requireAuth,
-  profileUpload.single("profilePic"),
+  profileUpload.single("file"),
   authController.uploadProfilePic
 );
+// routes/userRoutes.js
 
+router.get("/profile-pic/:id", authController.getProfilePic);
 
 module.exports = router;

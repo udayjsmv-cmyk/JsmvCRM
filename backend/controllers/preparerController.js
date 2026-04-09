@@ -2,6 +2,7 @@
 const Client = require("../models/Client");
 const ActivityLog = require("../models/ActivityLog");
 const mongoose = require("mongoose");
+ const { uploadToGridFS } = require("../middleware/uploadMiddleware");
 exports.getAllForwardedDocuments = async (req, res) => {
   try {
     if (!["preparer", "manager", "admin"].includes(req.user.role)) {
@@ -26,7 +27,7 @@ const allDocs = clients.flatMap((client) =>
       fileId: doc.fileId,
       fileName: doc.fileName,
       fileUrl: doc.fileUrl,
-      status: doc.reviewStatus === "returned" ? "returned" : doc.status,
+      status: doc.reviewStatus === "corrections" ? "corrections" : doc.status,
       uploadedAt: doc.uploadedAt,
 
       // ✅ ADD THIS
@@ -46,9 +47,9 @@ const allDocs = clients.flatMap((client) =>
       parentFileId: doc.parentFileId || null,
 
       // ✅ KEY FIX: document-level flags
-      isReturned: doc.reviewStatus === "returned",
+      isReturned: doc.reviewStatus === "corrections",
      isPending:
-      doc.reviewStatus !== "returned" &&
+      doc.reviewStatus !== "corrections" &&
      ["uploaded", "in-preparation"].includes(doc.status),
       isForwarded: doc.status === "forwarded-review",
     }))
@@ -56,8 +57,8 @@ const allDocs = clients.flatMap((client) =>
 
     // 🔥 Sort: returned first, then latest
 allDocs.sort((a, b) => {
-  if (a.status === "returned" && b.status !== "returned") return -1;
-  if (a.status !== "returned" && b.status === "returned") return 1;
+  if (a.status === "corrections" && b.status !== "corrections") return -1;
+  if (a.status !== "corrections" && b.status === "corrections") return 1;
   return new Date(b.uploadedAt) - new Date(a.uploadedAt);
 });
     return res.status(200).json({ documents: allDocs });
@@ -76,32 +77,40 @@ exports.uploadUpdatedDocument = async (req, res) => {
     if (!client) return res.status(404).json({ message: "Client not found" });
 
     if (req.user.role !== "preparer") {
-      return res.status(403).json({ message: "Only Preparer can upload updated documents" });
+      return res.status(403).json({ message: "Only Preparer allowed" });
     }
 
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
+    const uploadedFile = await uploadToGridFS(req.file, req.user);
+
+    if (!uploadedFile || !uploadedFile.fileId) {
+      return res.status(500).json({ message: "File upload failed" });
+    }
+
     const newDoc = {
-      fileId: req.file.id || new mongoose.Types.ObjectId(),
-      fileName: req.file.originalname,
-      fileType: req.file.mimetype,
-      fileUrl: `/api/files/${req.file.id}`,
+      fileId: uploadedFile.fileId,
+      fileName: uploadedFile.fileName,
+      fileType: uploadedFile.fileType,
+      fileUrl: uploadedFile.fileUrl,
       uploadedAt: new Date(),
       uploadedBy: req.user._id,
       teamName: req.user.teamName,
       uploadedByRole: "preparer",
       version: "updated",
       parentFileId: req.body.parentFileId || null,
-      status: "in-preparation", // 🔹 Updated doc is automatically in preparation
+      status: "in-preparation",
       forwardedToPreparationDate: new Date(),
     };
-    // ✅ Ensure documents array exists
+
     if (!Array.isArray(client.documents)) {
       client.documents = [];
     }
+
     client.documents.push(newDoc);
+
     client.handledByPreparer = req.user._id;
     client.forwardedToPreparation = true;
     client.returnedToPreparation = false;
@@ -111,7 +120,7 @@ exports.uploadUpdatedDocument = async (req, res) => {
     client.actionHistory.push({
       action: "Updated Document Uploaded",
       performedBy: req.user._id,
-      notes: `Uploaded updated document ${req.file.originalname}`,
+      notes: `Uploaded updated document ${uploadedFile.fileName}`,
       date: new Date(),
     });
 
@@ -122,17 +131,22 @@ exports.uploadUpdatedDocument = async (req, res) => {
       action: "upload_updated_doc",
       targetCollection: "Client",
       targetId: client._id,
-      details: { fileName: req.file.originalname, fileId: req.file.id },
+      details: { 
+        fileName: uploadedFile.fileName, 
+        fileId: uploadedFile.fileId 
+      },
     });
 
-    return res
-      .status(200)
-      .json({ message: "Updated document uploaded successfully", document: newDoc });
+    res.status(200).json({
+      message: "Updated document uploaded successfully",
+      document: newDoc,
+    });
   } catch (err) {
     console.error("❌ uploadUpdatedDocument error:", err);
-    return res
-      .status(500)
-      .json({ message: "Error uploading updated document", error: err.message });
+    res.status(500).json({
+      message: "Error uploading updated document",
+      error: err.message,
+    });
   }
 };
 exports.forwardToReviewer = async (req, res) => {

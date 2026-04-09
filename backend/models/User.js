@@ -49,11 +49,10 @@ const userSchema = new mongoose.Schema(
     managerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, index: true },
     teamleadId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, index: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-    profilePic: {
-      fileName: String,
-      fileType: String,
-      fileUrl: String,
-      uploadedAt: { type: Date, default: Date.now },
+        profilePic: {
+      data: Buffer,
+      contentType: String,
+      fileName: String
     },
     documents: [
       {

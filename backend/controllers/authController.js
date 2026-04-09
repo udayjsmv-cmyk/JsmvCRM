@@ -222,37 +222,25 @@ exports.getMyprofile = async (req, res) => {
 };
 exports.uploadProfilePic = async (req, res) => {
   try {
-    const userId = req.user.id; // from auth middleware
-
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Upload file to GridFS / storage
-    const fileData = await uploadToGridFS(req.file,req.user);
+    const user = await User.findById(req.user._id);
 
-    // fileData should return: { fileUrl, fileName, fileType }
+    user.profilePic = {
+      data: req.file.buffer,
+      contentType: req.file.mimetype,
+      fileName: req.file.originalname
+    };
 
-    const updatedUser = await User.findByIdAndUpdate(
-    userId,
-    {
-      profilePic: {
-        fileName: fileData.fileName,
-        fileType: fileData.fileType,
-        fileUrl: fileData.fileUrl,
-        uploadedAt: new Date(),
-      },
-    },
-    { new: true }
-  ).select("-password");
+    await user.save();
 
-    res.status(200).json({
-      message: "Profile picture uploaded successfully",
-      user: updatedUser,
-    });
+    res.json({ message: "Profile picture uploaded successfully" });
+
   } catch (err) {
-    console.error("Profile Pic Upload Error:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error(err);
+    res.status(500).json({ message: "Upload failed" });
   }
 };
 exports.updateProfile = async (req, res) => {
@@ -278,5 +266,21 @@ exports.updateProfile = async (req, res) => {
   } catch (err) {
     console.error("Update Profile Error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+exports.getProfilePic = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user || !user.profilePic || !user.profilePic.data) {
+      return res.status(404).send("No profile picture found");
+    }
+
+    res.set("Content-Type", user.profilePic.contentType);
+    res.send(user.profilePic.data);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error fetching profile picture");
   }
 };
