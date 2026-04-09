@@ -14,13 +14,13 @@ const Sidebar = () => {
       dashboard: true,
       employees: true,
       clients: true,
-      departments: ["calling", "prepare", "reviewer", "account", "payment"],
+      departments: ["calling", "preparer", "reviewer", "account", "payment"],
     },
     manager: {
       dashboard: true,
       employees: true,
       clients: true,
-      departments: ["calling", "prepare", "reviewer", "account", "payment"],
+      departments: ["calling", "preparer", "reviewer", "account", "payment"],
     },
     employee: {
       dashboard: true, // ✅ Dashboard enabled for employee
